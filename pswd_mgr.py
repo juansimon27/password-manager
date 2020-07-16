@@ -1,5 +1,5 @@
-from sqlite3 import connect
-from time import ctime
+from sqlite3 import connect, OperationalError
+from time import ctime, sleep
 
 
 DATABASE = "credentials.db"
@@ -41,12 +41,23 @@ def create_table(c):
     c.execute(sql_command)
 
 
-def show_records(c, website=None):
-    add = f"WHERE website = '{website}'" if website is not None else ''
+def show_records(c):
+    website_qry = None
+    print("\n*************** DISPLAY OPTIONS ****************\n",
+          "--- press 'query' -> display specific record\n"
+          "***********************************************\n")
+
+    show_option = input("--> ")
+    if show_option == 'query':
+        website_qry = input("Enter website fot which to display credentials: ")
+
+    add = f"WHERE website = '{website_qry}'" if website_qry is not None else ''
     sql_query = "SELECT * FROM credentials_table %s" % add
-    print(sql_query)
+
     for record in c.execute(sql_query):
         print(record)
+
+    sleep(1.5)
 
 
 def insert_record(c):
@@ -64,7 +75,7 @@ def insert_record(c):
 
 
 def update_record(c, web=None):
-    website = web if web is not None else input("Enter website to update: ")
+    website = input("Enter website to update: ") if web is None else web
     username, password, mod_date = user_input()
 
     sql_comand = '''UPDATE credentials_table
@@ -102,15 +113,12 @@ def main():
 
         if option == 'i':
             insert_record(c)
-            conn.commit()
 
         elif option == 'd':
             delete_record(c)
-            conn.commit()
 
         elif option == 'u':
             update_record(c)
-            conn.commit()
 
         elif option == 's':
             show_records(c)
@@ -120,6 +128,8 @@ def main():
 
         else:
             print("INVALID OPTION -> Please refer to available user options")
+
+        conn.commit()
 
     conn.close()
 
